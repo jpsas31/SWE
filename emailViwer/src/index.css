@@ -19,61 +19,34 @@
   }
 
 .email-visualizer {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    max-height: 100vh;
+  @apply flex flex-col h-screen max-h-screen
+   
   }
   .navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #333;
-    color: #fff;
-  
-    padding: 1rem;
+    @apply flex items-center justify-between bg-gray-800 text-white p-4
   }
   .logo {
-    color: #fff;
-    font-weight: bold;
+    @apply text-white font-bold
   }
   .search-form {
     flex-grow: 1;
   }
   .search-input {
-    background-color: #444;
-    color: #fff;
-    border: 1px solid #666;
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-    width: 100%;
+    @apply bg-[#444] text-white border border-gray-600 rounded-md px-2 py-1 w-full
   }
   .main-content {
-    background-color: #222;
-    display: grid;
-    grid-template-rows: 1fr;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    flex: 1;
-    min-height: 0;
+    @apply bg-[#222] grid grid-cols-2 gap-4 flex-1 min-h-0
+  
   }
   .table-container {
-    flex: 1;
-    border: 1px solid #666;
-    overflow-y: auto;
-    overflow-x: hidden;
-    border: 1px solid #ccc;
+    @apply flex-1 border border-[#666] overflow-y-auto overflow-x-hidden
+ 
   }
   .body-display {
-    max-height: 100vh;
-    width: 100%;
-    overflow: auto;
-    background-color: #444;
-    color: #fff;
-    border: 1px solid #666;
-    padding: 0.5rem;
+    @apply max-h-screen w-full overflow-auto bg-[#444] text-white border border-[#666] p-2
   }
 
 .separator {
     margin-right: 20px; 
   }
+  
