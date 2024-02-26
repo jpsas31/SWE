@@ -37,16 +37,16 @@ export default {
   },
   methods: {
     async search() {
-      console.log(`Searching ${this.searchTerm}`);
+      console.log(`Searching ${this.searchVal}`);
 
-      try {
+      try { 
         const response = await fetch("http://localhost:4040/api/search", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            search_term: this.searchTerm,
+            search_term: this.searchVal,
             page: 1
           })
         });
