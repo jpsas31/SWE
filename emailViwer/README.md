@@ -1,4 +1,4 @@
-# emailViwer
+# emailViewer
 
 ## Project Setup
 
