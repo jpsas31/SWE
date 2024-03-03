@@ -1,8 +1,8 @@
 package chiAPI
 
 import (
+	"log"
 	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -10,6 +10,7 @@ import (
 
 func InitServer(addr string, profiling bool) {
 	r := chi.NewRouter()
+
 	r.Use(middleware.Logger)
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -21,7 +22,7 @@ func InitServer(addr string, profiling bool) {
 	})
 	r.Use(cors.Handler)
 
-	if profiling == true {
+	if profiling {
 		r.Mount("/debug", middleware.Profiler())
 	}
 
@@ -32,6 +33,9 @@ func InitServer(addr string, profiling bool) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("404 Not Found"))
 	})
-
-	http.ListenAndServe(addr, r)
+	// Start the HTTP server
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Printf("server error: %v", err)
+		return 
+	}
 }

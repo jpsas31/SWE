@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
 	"github.com/jpsas31/SWE/indexer/zincSearchAPIClient"
 )
 
@@ -18,7 +17,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&decoded)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -26,15 +25,15 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	result, err := zincSearchAPIClient.Search(decoded.Page, decoded.SearchTerm)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err, http.StatusInternalServerError)
 	}
 	response, err := json.Marshal(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err, http.StatusInternalServerError)
 	}
 
 	_, err = w.Write(response)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err, http.StatusInternalServerError)
 	}
 }
