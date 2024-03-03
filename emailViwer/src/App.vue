@@ -56,8 +56,15 @@ export default {
         }
 
         const data = await response.json();
+       
+        if (data === null) {
+          console.warn('there are no results with the given keyword');
+          this.searchResults = []
+          return;
+        }
+
         this.searchResults = data.map(x => x._source);
-        console.log(this.searchResults);
+        
       } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
       }
