@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
 
 const (
-	ENDPOINT  = "http://localhost:4080/api/Emails/_search"
-	PAGE_SIZE = 50 // Number of results per page
+	endpoint = "http://localhost:4080/api/Emails/_search"
+	pageSize = 50 // Number of results per page
 
 )
 
@@ -30,41 +29,20 @@ type Query struct {
 func Search(page int, searchTerm string) ([]map[string]interface{}, error) {
 	creds, err := LoadCredentials(SecretFilePath)
 	if err != nil {
-		log.Printf("Error loading credentials: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error marshalling query: %v", err)
 	}
 
-	from := (page - 1) * PAGE_SIZE
-	var query SearchQuery
-	if searchTerm == "" {
-		query = SearchQuery{
-			SearchType: "matchall",
-			From:       from,
-			MaxResults: PAGE_SIZE,
-			Source:     []string{},
-		}
-	} else {
-		query = SearchQuery{
-			SearchType: "match",
-			Query: Query{
-				Term: searchTerm,
-			},
-			From:       from,
-			MaxResults: PAGE_SIZE,
-			Source:     []string{},
-		}
-	}
+	from := (page - 1) * pageSize
+	query := createSearchQuery(searchTerm, from)
 
 	jsonData, err := json.Marshal(query)
 	if err != nil {
-		log.Printf("Error marshalling query: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error marshalling query: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", ENDPOINT, strings.NewReader(string(jsonData)))
+	req, err := http.NewRequest("POST", endpoint, strings.NewReader(string(jsonData)))
 	if err != nil {
-		log.Printf("Error creating request: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
 	req.SetBasicAuth(creds.User, creds.Password)
@@ -72,40 +50,62 @@ func Search(page int, searchTerm string) ([]map[string]interface{}, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Printf("Error executing request: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error executing request: %v", err)
 	}
 	defer resp.Body.Close()
 
-	log.Println(resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Error reading response body: %v", err)
-		return nil, err
+
+		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		log.Printf("Error unmarshalling response body: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error decoding response body: %v", err)
 	}
-
+	
 	fmt.Println("Response Status:", resp.Status)
 
 	hits, ok := result["hits"].(map[string]interface{})["hits"].([]interface{})
 	if !ok {
-		err := fmt.Errorf("hits.hits field is not a slice of interfaces")
-		log.Printf("Error parsing response: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error parsing response: hits.hits field is not a slice of interfaces")
 	}
 
-	var values = []map[string]interface{}{}
+	return convertHitsToMaps(hits), nil
+}
+
+func convertHitsToMaps(hits []interface{}) []map[string]interface{} {
+	var values []map[string]interface{}
 	for _, val := range hits {
 		entry := val.(map[string]interface{})
 		values = append(values, entry)
 	}
+	return values
+}
 
-	return values, nil
+func createSearchQuery(searchTerm string, from int) SearchQuery {
+	if searchTerm == "" {
+		return SearchQuery{
+			SearchType: "matchall",
+			From:       from,
+			MaxResults: pageSize,
+			Source:     []string{},
+		}
+	} else {
+		return SearchQuery{
+			SearchType: "match",
+			Query: Query{
+				Term: searchTerm,
+			},
+			From:       from,
+			MaxResults: pageSize,
+			Source:     []string{},
+		}
+	}
 }
