@@ -7,12 +7,10 @@ import (
 	"strings"
 )
 
-// checkError checks for an error and handles it.
-func checkError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
+const (
+	MaxEntrySize = 1000000 // Maximum size that the scanner defined in zincsearch can take without erroring out
+	HeaderMarker = "X-FileName"
+)
 
 // sumMapValuesLen calculates the sum of lengths of values in a map.
 func sumMapValuesLen(m map[string]string) int {
@@ -27,18 +25,17 @@ func sumMapValuesLen(m map[string]string) int {
 func newEmailEntry(filepath string) (map[string]string, error) {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading file: %v", err)
 	}
-
-	headerEndPos := bytes.Index(data, []byte("X-FileName"))
+	headerEndPos := bytes.Index(data, []byte(HeaderMarker))
 	headerEndPos = headerEndPos + bytes.Index(data[headerEndPos:], []byte("\n"))
 	message := string(data[headerEndPos:])
 	header := string(data[:headerEndPos])
 	entry := make(map[string]string)
 	parseHeader(header, &entry)
 	entry["Message"] = message
-	if sumMapValuesLen(entry) > 1000000 {
-		fmt.Println("Email ", filepath, " is too long and can't be indexed")
+	if sumMapValuesLen(entry) > MaxEntrySize {
+		fmt.Println("Warning: Email ", filepath, " is too long and can't be indexed")
 		return nil, nil
 	}
 
