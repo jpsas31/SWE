@@ -11,7 +11,10 @@ type searchRequest struct {
 	SearchTerm string `json:"search_term"`
 	Page       int    `json:"page"`
 }
-
+type searchResponse struct {
+	Results  []map[string]interface{} `json:"results"`
+	TotalPages   int      `json:"pages"`
+}
 func SearchHandler(w http.ResponseWriter, r *http.Request) {
 	var decoded searchRequest
 
@@ -23,17 +26,24 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Requested %s\n", decoded.SearchTerm)
 
-	result, err := zincSearchAPIClient.Search(decoded.Page, decoded.SearchTerm)
+	result, pages, err := zincSearchAPIClient.Search(decoded.Page, decoded.SearchTerm)
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)
 	}
-	response, err := json.Marshal(result)
+	response := searchResponse{
+		Results: result,
+		TotalPages: pages,
+	}
+
+	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)
 	}
 
-	_, err = w.Write(response)
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(jsonResponse)
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)
+		return
 	}
 }
