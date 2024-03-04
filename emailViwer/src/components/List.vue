@@ -1,12 +1,12 @@
 <template>
-  <table id="list" class="table-fixed bg-gray-800 text-white shadow-lg">
+  <table id="list" class="w-full overflow-x-auto bg-[#333333] text-white shadow-lg">
     <thead>
-        <th v-for="field in fields" :key="field" class="bg-blue-600 border text-left">
+        <th v-for="field in fields" :key="field" class="bg-[#4a90e2] border text-left">
           {{ field }} 
         </th>
     </thead>
     <tbody>
-      <tr v-for="item in data" :key="item.id" @click="$emit('row-clicked', item[returnField])" class="hover:bg-gray-700">
+      <tr v-for="item in data" :key="item.id" @click="$emit('row-clicked', item[returnField])" class="bg-gray-700 hover:bg-[#333333]">
         <td v-for="field in fields" :key="field" class="border">{{ item[field] }}</td>
       </tr>
     </tbody>

@@ -1,23 +1,28 @@
 <template>
-  <div class="email-visualizer">
-    <nav class="navbar">
-      <div class="logo">
+  <div  class="flex flex-col h-screen max-h-screen">
+    <nav class="flex items-center justify-between bg-[#333333] text-white p-4">
+      <div class="text-white font-bold">
         <span class="brand">Email Visualizer</span>
       </div>
-      <div class="separator"></div> 
-      <div class="search-form">
+      <div class="mr-5"></div> 
+      <div class="flex-grow">
         <form @submit.prevent="search">
-          <input v-model="searchVal" type="text" class="search-input" placeholder="Search">
+          <input v-model="searchVal" type="text" class="bg-[#444] text-white border border-gray-600 rounded-md px-2 py-1 w-full" placeholder="Search">
         </form>
       </div>
     </nav>
 
-    <main class="main-content">
-      <div class="table-container">
+    <main class="bg-[#222] grid grid-cols-2 gap-4 flex-1 min-h-0">
+      <div class="flex-1 border border-[#666] overflow-y-auto overflow-x-hidden">
         <List :fields="fields" :data="searchResults" returnField="Message" @row-clicked="rowClicked"/>
       </div>
-      <textarea v-model="textAreaVal" class="body-display" placeholder="Selected email body" readonly></textarea>
+      <textarea v-model="textAreaVal" class="max-h-screen w-full overflow-auto bg-[#444] text-white border border-[#666] p-2" placeholder="Selected email body" readonly></textarea>
     </main>
+    <footer class="bg-[#333333] p-4 flex items-center justify-center">
+      <button @click="prevPage" :disabled="currentPage <= 1" class="bg-[#444] hover:bg-[#555] w-full text-white bg-transparent border border-white rounded px-2 py-1">Previous</button>
+      <span class="text-white px-2">{{ currentPage }}</span>
+      <button @click="nextPage"  :disabled="currentPage > this.totalPages" class=" bg-[#444] hover:bg-[#555] w-full text-white bg-transparent border border-white rounded px-2 py-1">Next</button>
+    </footer>
   </div>
 </template>
 
@@ -33,6 +38,8 @@ export default {
       searchResults: [],
       fields: ["Subject", "From", "To"],
       textAreaVal: 'Message',
+      currentPage: 1,
+      totalPages:0
     };
   },
   methods: {
@@ -47,7 +54,7 @@ export default {
           },
           body: JSON.stringify({
             search_term: this.searchVal,
-            page: 1
+            page: this.currentPage
           })
         });
 
@@ -62,8 +69,10 @@ export default {
           this.searchResults = []
           return;
         }
-
-        this.searchResults = data.map(x => x._source);
+        
+        this.searchResults = data.results.map(x => x._source);
+        this.totalPages = data.pages;
+        console.log(this.totalPages)
         
       } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
@@ -71,6 +80,19 @@ export default {
     },
     rowClicked(body) {
       this.textAreaVal = body;
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.search();
+      }
+      
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.search();
+      }
     }
   }
 }
